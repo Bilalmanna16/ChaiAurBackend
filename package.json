@@ -1,0 +1,16 @@
+{
+  "name": "chaiaurcode",
+  "version": "1.0.0",
+  "description": "A proffesional Backend series.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "backend",
+    "chai",
+    "javascript"
+  ],
+  "author": "Bilal Manna",
+  "license": "ISC"
+}
