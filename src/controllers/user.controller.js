@@ -4,6 +4,7 @@ import {User} from "../models/user.model.js"
 import {uploadOnCoudinary} from "../utils/cloudinary.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 const generateAccessAndRefreshToken = async(userId)=>{
@@ -228,7 +229,7 @@ const changeCurrentPassword = asyncHandler(async(req,res)=>{
     return res
     .status(200)
     .json(
-        new ApiResponse(200,{},"Password changes SuccessFully")
+        new ApiResponse(200,{},"Password changed SuccessFully")
     )
 
 })
