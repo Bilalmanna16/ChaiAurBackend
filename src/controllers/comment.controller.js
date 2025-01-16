@@ -7,11 +7,12 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   //TODO: get all comments for a video
-  const { videoId } = (mongoose.Types.ObjectId(req.params))
+  const videoId = req.params.videoId;
   const { page = 1, limit = 10 } = req.query;
+  
 
-  if (!videoId) {
-    throw new ApiError(400, "The video ID is required.");
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    throw new ApiError(400, "Incoming data is not an valid ObjectId");
   }
 
   const video = await Video.findById(videoId);
@@ -85,114 +86,86 @@ const addComment = asyncHandler(async (req, res) => {
   });
 
   const addedComment = await Comment.find({
-    $and:[{video: videoId},{owner: userId}]
-  })
+    $and: [{ video: videoId }, { owner: userId }],
+  });
 
-  if(!addedComment){
-    throw new ApiError(500,"Something went wrong while adding comment.")
+  if (!addedComment) {
+    throw new ApiError(500, "Something went wrong while adding comment.");
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(
-        200,
-        addedComment,
-        "New Comment added SuccessFully"
-    )
-  )
-
+    .status(200)
+    .json(new ApiResponse(200, addedComment, "New Comment added SuccessFully"));
 });
 
 const updateComment = asyncHandler(async (req, res) => {
   // TODO: update a comment
-  const videoId = mongoose.Types.ObjectId(req.params.videoId)
-  const userId = mongoose.Types.ObjectId(req.params.userId)
-  const commentId = mongoose.Types.ObjectId(req.params.commentId)
-  const {updatedContent} = req.body
+  const videoId = mongoose.Types.ObjectId(req.params.videoId);
+  const userId = mongoose.Types.ObjectId(req.params.userId);
+  const commentId = mongoose.Types.ObjectId(req.params.commentId);
+  const { updatedContent } = req.body;
 
-  if(!videoId || !commentId || !userId){
-    throw new ApiError(400,"All details are required")
+  if (!videoId || !commentId || !userId) {
+    throw new ApiError(400, "All details are required");
   }
 
-  const video = await Video.findById(videoId)
-  if(!video){
-    throw new ApiError(404,"Video not found")
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
   }
 
-  const comment = await Video.findById(commentId)
-  if(!comment){
-    throw new ApiError(404,"comment not found")
+  const comment = await Video.findById(commentId);
+  if (!comment) {
+    throw new ApiError(404, "comment not found");
   }
 
-  if(req.user?._id !== userId){
-    throw new ApiError(400,"User is not Authorized to update.")
+  if (req.user?._id !== userId) {
+    throw new ApiError(400, "User is not Authorized to update.");
   }
 
-  const commentUpdated = await Comment.findByIdAndUpdate(
-    commentId,
-    {
-        $set:{
-            content: updatedContent
-        }
+  const commentUpdated = await Comment.findByIdAndUpdate(commentId, {
+    $set: {
+      content: updatedContent,
     },
-  )
+  });
 
-  if(!commentUpdated){
-    throw new ApiError(500,"Something went wrong while updating the comment")
+  if (!commentUpdated) {
+    throw new ApiError(500, "Something went wrong while updating the comment");
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(
-        200,
-        commentUpdated,
-        "Comment updated successFully"
-    )
-  )
-
-
+    .status(200)
+    .json(new ApiResponse(200, commentUpdated, "Comment updated successFully"));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
   // TODO: delete a comment
-  const videoId = mongoose.Types.ObjectId(req.params.videoId)
-  const userId = mongoose.Types.ObjectId(req.params.userId)
-  const commentId = mongoose.Types.ObjectId(req.params.commentId)
+  const videoId = mongoose.Types.ObjectId(req.params.videoId);
+  const userId = mongoose.Types.ObjectId(req.params.userId);
+  const commentId = mongoose.Types.ObjectId(req.params.commentId);
 
-  if(!videoId || !commentId || !userId){
-    throw new ApiError(400,"All details are required")
+  if (!videoId || !commentId || !userId) {
+    throw new ApiError(400, "All details are required");
   }
 
-  const video = await Video.findById(videoId)
-  if(!video){
-    throw new ApiError(404,"Video not found")
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found");
   }
 
-  if(req.user?._id !== userId){
-    throw new ApiError(400,"User is not Authorized to delete the comment.")
+  if (req.user?._id !== userId) {
+    throw new ApiError(400, "User is not Authorized to delete the comment.");
   }
 
-  const comment = Comment.findByIdAndDelete(
-    commentId
-  )
+  const comment = Comment.findByIdAndDelete(commentId);
 
-  if(!comment){
-    throw new ApiError(500,"Something went wrong while deleting the comment")
+  if (!comment) {
+    throw new ApiError(500, "Something went wrong while deleting the comment");
   }
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(
-        200,
-        {},
-        "Comment deleted successfully"
-    )
-  )
-
-
+    .status(200)
+    .json(new ApiResponse(200, {}, "Comment deleted successfully"));
 });
 
 export { getVideoComments, addComment, updateComment, deleteComment };
