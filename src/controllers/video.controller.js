@@ -4,19 +4,18 @@ import {User} from "../models/user.model.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {asyncHandler} from "../utils/asyncHandler.js"
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
-import { Video } from "../models/video.model.js"
+import {uploadOnCoudinary} from "../utils/cloudinary.js";
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
 
-    if(!Video.schema.path(sortBy)){
+    if(!Video.schema.path(sortType)){
         throw new ApiError(400,"The sorting criteria is invalid")
     }
 
-    if(sortType!=="asc" || sortType!=="desc"){
+    if(sortBy!== "1" && sortBy !== "-1"){
         throw new ApiError(400,"The sorting order is invalid")
     }
 
@@ -36,7 +35,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         },
         {
             $sort: {
-                [sortBy]: sortType
+                [sortType]: Number(sortBy)
             }
         },
         {
@@ -52,22 +51,19 @@ const getAllVideos = asyncHandler(async (req, res) => {
         throw new ApiError(500,"No videos found for the given search term")
     }
 
-    const numberOfVideos = videos.countDocuments()
+    if(videos.length === 0){
+        throw new ApiError(500,"No videos found for the given search term")
+    }
+
+    const numberOfVideos = Video.countDocuments()
 
     return res
     .status(200)
-    .json({
-        response: new ApiResponse(
-            200,
-            videos,
-            "Videos fetched successFully"
-        ),
-        pagination:{
-            page,
-            limit,
-            numberOfVideos,
-        }
-    }        
+    .json( new ApiResponse(
+        200,
+        videos,
+        "Videos fetched successFully"
+    )    
 )
 
 
@@ -88,7 +84,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400,"The userId is invalid")
     }
 
-    const videoLocalPath = req.files?.video[0]?.path
+    const videoLocalPath = req.files?.videoFile[0]?.path
     const thumbnailLocalPath = req.files?.thumbnail[0]?.path
     if(!videoLocalPath){
         throw new ApiError(400,"The Video file is required")
@@ -98,12 +94,12 @@ const publishAVideo = asyncHandler(async (req, res) => {
     }
 
 
-    if(req.files?.video[0]?.mimetype !== "video/mp4"){
+    if(req.files?.videoFile[0]?.mimetype !== "video/mp4"){
         throw new ApiError(400,"Invalid File Type")
     }
 
-    const videoFile = await uploadOnCloudinary(videoLocalPath)
-    const thumbnailFile = await uploadOnCloudinary(thumbnailLocalPath)
+    const videoFile = await uploadOnCoudinary(videoLocalPath)
+    const thumbnailFile = await uploadOnCoudinary(thumbnailLocalPath)
     if(!videoFile){
         throw new ApiError(400,"Something went wrong while uploading to cloudinary")
     }
@@ -187,7 +183,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         throw new ApiError(404,"Video not found")
     }
 
-    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
+    const thumbnail = await uploadOnCoudinary(thumbnailLocalPath)
     if(!thumbnail.url){
         throw new ApiError(500,"Something went wrong while uploading thumbnail file on Cloudinary")
     }
@@ -228,7 +224,7 @@ const deleteVideo = asyncHandler(async (req, res) => {
     if(!video){
         throw new ApiError(404,"Video not found")
     }
-    if(video.owner !== userId){
+    if(video.owner.toString() !== userId.toString()){
         throw new ApiError(400,"Unauthorized Request")
     }
 
